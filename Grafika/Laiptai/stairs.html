@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html>
+    
+<head>
+    <title>Stairs</title>
+    <script type="text/javascript" src="C:/Users/Darbas/Documents/5semestras/grafika/three.js"></script>
+    <script
+			  src="https://code.jquery.com/jquery-1.12.4.min.js"
+			  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+			  crossorigin="anonymous"></script>
+    <script type="text/javascript" src="C:/Users/Darbas/Documents/5semestras/grafika/stats.js"></script>
+    <script type="text/javascript" src="C:/Users/Darbas/Documents/5semestras/grafika/dat.gui.js"></script>
+    <script type="text/javascript" src="C:/Users/Darbas/Documents/5semestras/grafika/controls.js"></script>
+    <style>
+        body{
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+        <div id="WebGL-output">
+        </div>
+
+<script type="text/javascript">
+
+    const logs = (a) => {console.log(a); return a;}
+    let stats;
+    // once everything is loaded, we run our Three.js stuff.
+    $(function () {
+        
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        const scene = new THREE.Scene();
+        // create a camera, which defines where we're looking at.
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        stats = new Stats();
+
+        controls = new THREE.TrackballControls( camera );
+
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+
+        controls.noZoom = false;
+        controls.noPan = false;
+
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+
+        controls.keys = [ 65, 83, 68 ];
+
+        controls.addEventListener( 'change', render );
+        // create a render and set the size
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setClearColor(new THREE.Color(0xEEEEEE));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+
+        // create the ground plane
+        const planeGeometry = new THREE.PlaneGeometry(60,30,0);
+        const planeMaterial =    new THREE.MeshLambertMaterial({color: 0xFF0000, side: THREE.DoubleSide});
+        const plane = new THREE.Mesh(planeGeometry,planeMaterial);
+        plane.receiveShadow  = true;
+
+        //create the second floor
+        const secondPlaneGeometry = new THREE.PlaneGeometry(30,25);
+        const secondMaterial = new THREE.MeshLambertMaterial({color: 0xFF0000, side: THREE.DoubleSide});
+        const secondPlane = new THREE.Mesh(secondPlaneGeometry,secondMaterial);
+        secondPlane.receiveShadow  = true;
+
+        // rotate and position the plane
+        plane.rotation.x=-0.5*Math.PI;
+        plane.position.x=15
+        plane.position.y=0
+        plane.position.z=0
+
+        
+
+        // add the plane to the scene
+        scene.add(plane);
+        
+        const extrudeSettings = {
+                steps:1,
+                depth: 0.5,
+                bevelEnabled: true,
+                bevelThickness: 0.25,
+                bevelSize: 0.1,
+                bevelOffset: 1,
+                bevelSegments: 3
+        };
+        // create a cube
+        const shape = drawShape();
+        for (let i = 0; i<16; i++) {
+            //laiptai
+            const group = new THREE.Group();
+            const cubeGeometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+            const cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xD2B48C } );
+            const cube = new THREE.Mesh( cubeGeometry, cubeMaterial ) ;
+            cube.castShadow = true;
+            //atrama
+            const atramaGeometry = new THREE.CubeGeometry(0.5,i,0.5);
+            const atramaMaterial = new THREE.MeshLambertMaterial({color: 0x696969});
+            const atrama = new THREE.Mesh(atramaGeometry, atramaMaterial);
+            atrama.castShadow = true;
+
+            //tureklai
+            const curve = new THREE.SplineCurve3( [
+                new THREE.Vector3( 0, 5 ,0),
+                new THREE.Vector3( 0, 0, 0 )
+            ] );
+            const geometry = new THREE.TubeGeometry(curve, 7, 0.3, 0 ,true);
+            const material = new THREE.MeshPhongMaterial( {color: 0x460000} );
+            const cylinder = new THREE.Mesh( geometry, material );
+            const cylinder2=new THREE.Mesh( geometry, material );
+            cylinder2.castShadow = true;
+            cylinder.castShadow = true;
+    
+            // position the cube
+            cube.rotation.x=-0.5*Math.PI
+            cube.rotation.z=0.5*Math.PI
+            cube.position.x=2;
+            cube.position.y=0.25;
+            cube.position.z=11;
+            if(i%2==0){
+                cube.rotation.x=0.5*Math.PI
+                cube.position.z=3
+                cube.position.y=0.75
+            }
+
+            //position the first cylinder
+            cylinder.position.x=0.4;
+            cylinder.position.y=0;
+            cylinder.position.z=10.5;
+
+            //position the second cylinder
+            cylinder2.position.x=0.4;
+            cylinder2.position.y=0;
+            cylinder2.position.z=3.5;
+
+            //position atrama
+            atrama.position.x=0.4;
+            atrama.position.y=-i/2;
+            atrama.position.z=7;
+            group.add(atrama)
+
+            group.add(cube)
+            group.rotation.y= i/10*Math.PI
+            group.position.y=i
+            group.add(cylinder2);
+            group.add(cylinder)
+            // add the cube to the scene
+            scene.add(group);
+            if(i==15){
+                //rotate and position the second plane
+                secondPlane.rotation.x=-0.5*Math.PI
+                secondPlane.rotation.z=-0.5*Math.PI
+                secondPlane.position.x=0;
+                secondPlane.position.y=i+1;
+                secondPlane.position.z=15; 
+                scene.add(secondPlane);
+            }
+        }
+
+        // position and point the camera to the center of the scene
+        camera.position.x = -40;
+        camera.position.y = 30;
+        camera.position.z = -30;
+        camera.lookAt(scene.position);
+
+        // add spotlight for the shadows
+        const spotLight = new THREE.SpotLight( 0xffffff );
+        spotLight.position.set( -40, 70, -30 );
+        spotLight.castShadow = true;
+        scene.add( spotLight );
+        const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+        scene.add( light );
+        // add the output of the renderer to the html element
+        $("#WebGL-output").append(renderer.domElement);
+
+        // call the render function
+        renderer.render(scene, camera);
+        animate()
+        //drawShape();
+
+        function animate() {
+            requestAnimationFrame( animate );
+            controls.update();
+        }
+        function render() {
+            renderer.render( scene, camera );
+            stats.update();
+        }
+        function drawShape() {
+            const length = 8, width = 3;
+
+            const shape = new THREE.Shape();
+            shape.moveTo( 0,0 );
+            shape.lineTo( 0, width );
+            shape.lineTo( length, width-1 );
+            shape.lineTo( length, 0 );
+            shape.lineTo( 0, 0 );
+
+            return shape;
+        }
+        
+    });
+
+
+</script>
+</body>
+</html>
